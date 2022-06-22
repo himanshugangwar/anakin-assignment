@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 from http import HTTPStatus
 
 from django.contrib.auth.models import User
@@ -12,6 +13,8 @@ from core.models import *
 from core.serializers import *
 
 # Create your views here.
+
+logger = logging.getLogger(__name__)
 
 
 class BrandViewSet(viewsets.ModelViewSet):
@@ -141,6 +144,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         try:
             product = Product.objects.get(id=pk)
         except User.DoesNotExist:
+            logger.warning(f"[UPDATE-PRODUCT] - Invalid product id: {pk}")
             return Response(
                 {"detail": "Invalid product id"}, HTTPStatus.BAD_REQUEST
             )
@@ -149,6 +153,7 @@ class ProductViewSet(viewsets.ModelViewSet):
             if product.price != update_price:
                 # price increase
                 if update_price > product.price:
+                    logger.info(f"[ISSUE-ALERT] - Price has been increased from {product.price} to {update_price}")
                     # Issuing a alert
                     alert = Alert.objects.create(
                         created_at=datetime.now(),
@@ -159,6 +164,7 @@ class ProductViewSet(viewsets.ModelViewSet):
                         ),
                     )
                 else:
+                    logger.info(f"[ISSUE-ALERT] - Price has been decreased from {product.price} to {update_price}")
                     # Issuing a alert
                     alert = Alert.objects.create(
                         created_at=datetime.now(),
@@ -213,6 +219,7 @@ class PromotionViewSet(viewsets.ModelViewSet):
 
     # prohibiting promotion creation
     def create(self, request):
+        logger.warning(f"[Promotion] - Invalid endpoint | valid endpoint is /promotion/create")
         return Response(
             data={"detail": "Valid endpoint is /promotion/create"},
             status=HTTPStatus.NOT_FOUND,
@@ -223,6 +230,7 @@ class PromotionViewSet(viewsets.ModelViewSet):
         # checking token is present
         key = request.headers.get("Authorization", None)
         if not key:
+            logger.warning(f"[Promotion] - Missing Authorization Token")
             return Response(
                 {"detail": "Missing Authorization Token"},
                 HTTPStatus.BAD_REQUEST,
@@ -230,6 +238,7 @@ class PromotionViewSet(viewsets.ModelViewSet):
         try:
             token = Token.objects.get(key=key)
         except:
+            logger.warning(f"[Promotion] - Invalid Authorization Token")
             return Response(
                 {"detail": "Invalid Authorization Token"},
                 HTTPStatus.BAD_REQUEST,
@@ -259,6 +268,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 else:
                     authenticated = False
         except User.DoesNotExist as e:
+            logger.warning(f"[LOGIN] - Invalid username")
             return Response(
                 data={"status": "Failure", "detail": "Invalid username"},
                 status=HTTPStatus.BAD_REQUEST,
@@ -270,6 +280,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=HTTPStatus.OK,
             )
         else:
+            logger.warning(f"[LOGIN] - Invalid password")
             return Response(
                 data={"status": "Failure", "detail": "Invalid password"},
                 status=HTTPStatus.BAD_REQUEST,
@@ -282,6 +293,7 @@ class UserViewSet(viewsets.ModelViewSet):
         try:
             user = User.objects.create(**signup_request)
         except Exception as e:
+            logger.warning(f"[LOGIN] - Duplicate username")
             return Response(
                 data={"status": "Failure", "detail": "Duplicate username"},
                 status=HTTPStatus.BAD_REQUEST,
