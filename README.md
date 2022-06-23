@@ -38,13 +38,14 @@ source /Users/{home_directory}/Library/Python/3.8/bin/virtualenvwrapper.sh
 - pip install -r requirements.txt
 
 7. Migrate DB
-./manage.py makemigrations
 
-./manage.py migrate
+- ./manage.py makemigrations
+
+- ./manage.py migrate
 
 8. Run Server
 
-- python manage.py runserver
+- ./manage.py runserver
 
 
 Check Server is running at http://127.0.0.1:8000/
